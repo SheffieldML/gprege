@@ -1,0 +1,23 @@
+citEntry(entry="Article",
+  header="The underlying methodology papers can be cited as:",
+  author =       "Alfredo A. Kalaitzis and Neil D. Lawrence",
+  title =        "A Simple Approach to Ranking Differentially Expressed Gene Expression Time Courses through Gaussian Process Regression",
+  journal =      "BMC Bioinformatics",
+  year =         "2011",
+  volume =       "12",
+  number =       "180",
+  doi =          "10.1186/1471-2105-12-180",
+  url =          "http://www.biomedcentral.com/1471-2105/12/180",
+  textVersion = paste(
+    "A. A. Kalaitzis and N. D. Lawrence.",
+    "A Simple Approach to Ranking Differentially Expressed Gene Expression
+    Time Courses through Gaussian Process Regression",
+    "BMC Bioinformatics 2011, 12:180.",
+    "DOI:10.1186/1471-2105-12-180."
+  )
+)
+
+citFooter("This free open-source software implements academic
+research by the authors and co-workers. If you use it,
+please support the project by citing the appropriate
+journal articles.")

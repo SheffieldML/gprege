@@ -1,0 +1,228 @@
+%\VignetteIndexEntry{gprege Quick Guide}
+%\VignetteKeywords{TimeCourse, GeneExpression, Transcription, DifferentialExpression}
+%\VignettePackage{gprege}
+\documentclass{article}
+\usepackage{url, subfigure, float}
+\usepackage[english]{babel} % Workaround to remove tildes from citation names.
+\usepackage[authoryear]{natbib}
+%\usepackage{pdfpages}
+
+\title{gprege Quick Guide}
+\author{Alfredo A. Kalaitzis, Neil D. Lawrence}
+
+\newcommand{\Rfunction}[1]{{\texttt{#1}}}
+\newcommand{\Robject}[1]{{\texttt{#1}}}
+\newcommand{\Rpackage}[1]{{\textit{#1}}}
+\newcommand{\gprege}{\Rpackage{gprege}}
+
+\begin{document}
+\maketitle
+\SweaveOpts{keep.source=TRUE}
+
+\section{Abstract}
+The \gprege{} package implements our methodology of Gaussian process regression models for the analysis of microarray time series.
+The package can be used to filter quiet genes and quantify/rank differential expression in time-series expression ratios.
+The purpose of this quick guide is to present a few examples of using gprege.
+
+\section{Citing \gprege{}}
+
+Citing \gprege{} in publications will involve citing the methodology paper \citep{Kalaitzis:simple11} that the software is based on as well as citing the software package itself.
+
+<<echo=FALSE, eval=TRUE>>=
+  options(width = 60)
+@
+
+\section{Introductory example analysis - TP63 microarray data}
+\label{section:Introductory example}
+
+In this section we introduce the main functions of the \Rpackage{gprege} package by repeating some of the analysis from the BMC Bioinformatics paper \citep{Kalaitzis:simple11}.
+
+\subsection{Installing the \gprege{} package}
+
+The recommended way to install \gprege{} is to use the
+\Rfunction{biocLite} function available from the bioconductor
+website. Installing in this way should ensure that all appropriate
+dependencies are met.
+
+<< eval=FALSE >>==
+  source("http://www.bioconductor.org/biocLite.R")
+  biocLite("gprege")
+@
+Otherwise, to manually install the gprege software, unpack the software and run
+\begin{verbatim}
+  R CMD INSTALL gprege
+\end{verbatim}
+To load the package start R and run
+<<>>=
+  library(gprege)
+@ 
+
+\subsection{Loading the data}
+For convenience, a fragment of the preproccessed data is provided in this package and can be loaded using
+<<eval=FALSE>>=
+  data(FragmentDellaGattaData)
+@
+The full dataset is available at \url{http://staffwww.dcs.shef.ac.uk/people/A.Kalaitzis/DellaGattaData.RData} and can be loaded using
+<<eval=FALSE>>=
+  # Download full Della Gatta dataset.
+  load(url('http://staffwww.dcs.shef.ac.uk/people/A.Kalaitzis/DellaGattaData.RData'))
+@
+Type \Rfunction{?DellaGattaData} for more details on the dataset.
+If you need to preprocess some gene expression time-series from scratch and the dataset originates from Affymetrix arrays,
+we highly recommend processing it with \Rfunction{rma} or \Rfunction{mmgmos} from the \Rpackage{affy} and \Rpackage{puma} packages respectively. \Rfunction{mmgmos} extracts error bars on the expression measurements directly from the array data to allow judging the reliability of individual measurements. A detailed guide on how to perform these steps can be found in the \Rpackage{tigre} \textit{Quick Guide}.
+
+\subsection{Interactive mode}
+Let us now examine one by one, in an interactive fashion, a few profiles of the full dataset (not available in the package). We start by downloading it.
+<<>>=
+  # Download full Della Gatta dataset.
+  con <- url('http://staffwww.dcs.shef.ac.uk/people/A.Kalaitzis/DellaGattaData.RData')
+  load(con)#  close.connection(con)
+  # Timepoints / GP inputs.
+  tTrue = matrix(seq(0,240,by=20), ncol=1)
+  gpregeOptions <- list()
+@
+These gene expression profiles correspond to the top ranks as direct targets suggested by TSNI \citep{della2008direct}.
+<<>>=
+  # Set index range so that only a top few targets suggested by TSNI be explored.
+  gpregeOptions$indexRange <- which(DGatta_labels_byTSNItop100)[1:2]
+@
+If the download fails, use the following instead.
+<<eval=FALSE>>=
+  # Load installed fragment-dataset.
+  data(FragmentDellaGattaData)
+  # Fragment dataset is comprised of top-ranked targets suggested by TSNI.
+  # Explore only the first few.
+  gpregeOptions$indexRange <- 1:2
+@
+The option \Rfunction{gpregeOptions\$explore<-TRUE} makes \Rfunction{gprege} wait for a keystroke to proceed to the next profile.
+<<>>=
+  # Explore individual profiles in interactive mode.
+  gpregeOptions$explore <- TRUE
+  # Exhaustive plot resolution of the LML function.
+  gpregeOptions$exhaustPlotRes <- 30
+  # Exhaustive plot contour levels.
+  gpregeOptions$exhaustPlotLevels <- 10
+  # Exhaustive plot maximum lengthscale.
+  gpregeOptions$exhaustPlotMaxWidth <- 100
+  # Noisy ground truth labels: which genes are in the top 786 ranks of the TSNI ranking.
+  gpregeOptions$labels <- DGatta_labels_byTSNItop100 
+  # SCG optimisation: maximum number of iterations.
+  gpregeOptions$iters <- 100
+  # SCG optimisation: no messages.
+  gpregeOptions$display <- FALSE
+  # Matrix of different hyperparameter configurations as rows:
+  # [inverse-lengthscale   percent-signal-variance   percent-noise-variance].
+  gpregeOptions$inithypers <-
+    matrix( c(  1/1000,	1e-3,	0.999,
+                1/30,	0.999,	1e-3,
+                1/80,	2/3, 1/3
+  ), ncol=3, byrow=TRUE)
+@
+\Rfunction{gprege} will generate a report and a few plots for each explored profile. The first line contains the index of the profile in \Rfunction{exprs\_tp63\_RMA} and its ground truth (according to TSNI). The hyperparameters of the optimised log-marginal likelihood (LML)  follow and then the initialisation (indicated by '<-') from which it came. Then a few statistics; the observed standard deviation of the time-series and the sum of the explained std.deviation (by the GP) and noise (Gaussian)  std.deviation. Finally the function \Rfunction{exhaustivePlot} will reveal, through an exhaustive search in the hyperparemeter space\footnote{\Rfunction{gpregeOptions\$exhaustPlotMaxWidth} defines the limit of the \textit{lengthscale} search range.}, the approximate true maximum LML and corresponding hyperparameters.
+<<eval=TRUE, echo=TRUE>>=
+  gpregeOutput<-gprege(data=exprs_tp63_RMA,inputs=tTrue,gpregeOptions=gpregeOptions)
+@
+<<results=tex,echo=FALSE, eval=TRUE>>=
+  for (i in 1:length(gpregeOptions$indexRange)) {
+    cat("\\begin{figure}[H]")
+    cat("\\centering")
+#     cat("\\subfigure[]{")
+    cat("\\includegraphics[width=0.7\\linewidth]{",  paste("gpPlot",i,".pdf",sep=""), "}\n\n",  sep="")
+#     cat("\\label{fig:seqfig", i, "}", sep = "")
+    cat("\\caption{GP fit with different initialisations on profile \\#", gpregeOptions$indexRange[i], ".}", sep="")
+    cat("\\label{fig:gpPlot", i, "}", sep = "")
+    cat("\\end{figure}")
+    
+    cat("\\begin{figure}[H]")
+    cat("\\centering")
+    cat("\\subfigure[]{")
+    cat("\\includegraphics[page=1,width=.7\\linewidth]{",paste("exhaustivePlot",i,".pdf",sep=""),"}}\n\n", sep="")
+    cat("\\subfigure[]{")
+    cat("\\includegraphics[page=2,width=.7\\linewidth]{",paste("exhaustivePlot",i,".pdf",sep=""),"}}\n\n", sep="")
+    cat("\\caption{Profile \\#", gpregeOptions$indexRange[i], " : (a) Log-marginal likelihood (LML) contour. (b) GP fit with maximum LML hyperparameters from the exhaustive search.}", sep = "")
+    cat("\\label{fig:exPlot", i, "}", sep = "")
+    cat("\\end{figure}")
+  }
+@
+
+\subsection{Comparing against BATS}
+Now we demonstrate \Rfunction{compareROC}, a facility for comparing the performance of gprege on a dataset with some other method (see figures below). In this example, we reproduce the main result presented in \citep{Kalaitzis:simple11} \footnote{Results on experimental data are slightly better because more initialisation points were used in optimising the likelihood wrt the kernel hypeparameters (\Rfunction{gpregeOptions\$inithypers}), and the optimisation with the best log-marginal likelihood was always used in the end.}.
+Specifically, we apply standard Gaussian process regression and BATS \citep{angelini2007bayesian} on experimental gene expression data, where only the top 100 ranks of TSNI were labelled as truly differentially expressed in the noisy ground truth. From the output of each model, a ranking of differential expression is produced and assessed with ROC curves to quantify how well in accordance to the noisy ground truth each method performs. For convenience, \Rfunction{gprege} was already run on the full DellaGatta dataset and the resulting rank metrics are stored in \Rfunction{gpregeOutput\$rankingScores} (see \Rfunction{demTp63Gp1(fulldataset=TRUE)}).
+
+<<>>=
+  # Load fragment dataset.
+  data(FragmentDellaGattaData)
+  # Download BATS rankings (Angelini, 2007)
+  # Case 1: Delta error prior, case 2: Inverse Gamma error prior,
+  #  case 3: Double Exponential error prior.
+  BATSranking = matrix(0, length(DGatta_labels_byTSNItop100), 3)
+  for (i in 1:3) { 
+    # Read gene numbers.
+    tmp <- read.table(url(paste(
+      'http://arxiv.org/src/1106.4333v1/anc/DGdat_p63_case',
+      i,'_GL.txt',sep='')), skip=1)
+    genenumbers <- as.numeric(lapply( as.character(tmp[,2]), 
+                                      function(x) x=substr(x,2,nchar(x))))
+    # Sort rankings by gene numbers.
+    BATSranking[,i] <- tmp[sort(genenumbers, index.return=TRUE)$ix, 4]
+  }
+@
+\begin{figure}[H]
+\centering
+<<fig=TRUE, echo=TRUE>>=
+  # The smaller a BATS-rank metric is, the better the rank of the gene
+  # reporter. Invert those rank metrics to compare on a common ground
+  # with gprege.
+  BATSranking = 1/BATSranking
+  compareROC(output=gpregeOutput$rankingScores,
+          groundTruthLabels=DGatta_labels_byTSNItop100,
+          compareToRanking=BATSranking)
+@
+\caption{ROC comparison on experimental data from \citep{della2008direct}. One curve for the GP method and three for BATS, using a different noise model (subscript 'G' for Gaussian, 'T' for Student's-t and 'DE' for double exponential marginal distributions of error), followed by the area under the corresponding curve (AUC).}
+\label{fig:ROC}
+\end{figure}
+
+
+\subsection{Ranking differential genes}
+Finally, the bulk ranking for differential expression is done with the full dataset,
+no interactive mode, and a ROC comparison in the end.
+Total computation time is approximately 45 minutes on a desktop running Ubuntu
+10.04 with a dual-core CPU at 2.8 GHz and 3.2 GiB of memory.
+<<eval=FALSE>>=
+  # Download full Della Gatta dataset.
+  con <- url('http://staffwww.dcs.shef.ac.uk/people/A.Kalaitzis/DellaGattaData.RData')
+  load(con); close.connection(con)
+  # Timepoints / GP inputs.
+  tTrue = matrix(seq(0,240,by=20), ncol=1)
+  gpregeOptions <- list()
+  # Explore individual profiles in interactive mode.
+  gpregeOptions$explore <- FALSE
+  # Exhaustive plot resolution of the LML function.
+  gpregeOptions$exhaustPlotRes <- 30
+  # Exhaustive plot contour levels.
+  gpregeOptions$exhaustPlotLevels <- 10
+  # Exhaustive plot maximum lengthscale.
+  gpregeOptions$exhaustPlotMaxWidth <- 100
+  # Noisy ground truth labels: which genes are in the top 786 ranks of the TSNI ranking.
+  gpregeOptions$labels <- DGatta_labels_byTSNItop100 
+  # SCG optimisation: maximum number of iterations.
+  gpregeOptions$iters <- 100
+  # SCG optimisation: no messages.
+  gpregeOptions$display <- FALSE
+  # Matrix of different hyperparameter configurations as rows:
+  # [inverse-lengthscale   percent-signal-variance   percent-noise-variance].
+  gpregeOptions$inithypers <-
+    matrix( c(  1/1000,  1e-3,	0.999,
+                1/8,	0.999,	1e-3,
+                1/80,	2/3, 1/3
+  ), ncol=3, byrow=TRUE)
+  gpregeOutput<-gprege(data=exprs_tp63_RMA,inputs=tTrue,gpregeOptions=gpregeOptions)
+@
+
+
+
+%\pagebreak
+\bibliographystyle{plainnat}
+\bibliography{gprege_quick}
+
+\end{document}

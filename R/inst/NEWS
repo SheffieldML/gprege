@@ -1,0 +1,9 @@
+Package: gprege
+==============
+
+Version: 0.99.0 [2011-07-11]
+* Initial version in Bioconductor.
+
+Version: 0.99.1 [2011-07-26]
+* Fixed error that exhaustivePlot gave on profiles with zero data variance. Now it simply ignores such profiles.
+

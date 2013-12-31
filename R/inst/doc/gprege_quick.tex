@@ -1,0 +1,64 @@
+%\VignetteIndexEntry{gprege Quick Guide}
+%\VignetteKeywords{TimeCourse, GeneExpression, Transcription, DifferentialExpression}
+%\VignettePackage{gprege}
+\documentclass[a4paper]{article}
+\usepackage{url}
+\usepackage[authoryear,round]{natbib}
+
+\title{gprege Quick Guide}
+\author{Alfredo A. Kalaitzis, Neil D. Lawrence and Antti Honkela}
+
+\newcommand{\Rfunction}[1]{{\texttt{#1}}}
+\newcommand{\Robject}[1]{{\texttt{#1}}}
+\newcommand{\Rpackage}[1]{{\textit{#1}}}
+\newcommand{\gprege}{\Rpackage{gprege}}
+
+\usepackage{Sweave}
+\begin{document}
+\maketitle
+
+
+\section{Abstract}
+ 
+
+The \gprege{} package implements our methodology of Gaussian process
+regression models for the analysis of microarray time series.
+The package can be used to filter quiet genes and quantify differential expression in time-series expression ratios or for ranking candidate targets of a trascription factor.
+
+The purpose of this quick guide is to present a few examples of using gprege.
+
+\section{Citing \gprege{}}
+
+Citing \gprege{} in publications will usually involve citing the methodology paper \citep{Kalaitzis:simple11} that the software is based on as well as citing the software package itself.
+
+
+\section{Introductory example analysis - TP63 microarray data}
+\label{section:Introductory example}
+
+In this section we introduce the main functions of the \Rpackage{gprege}
+package by repeating some of the analysis from the BMC Bioinformatics
+paper~\citep{Kalaitzis:simple11}
+
+\subsection{Installing the \gprege{} package}
+
+The recommended way to install \gprege{} is to use the
+\Rfunction{biocLite} function available from the bioconductor
+website. Installing in this way should ensure that all appropriate
+dependencies are met.
+
+\begin{Schunk}
+\begin{Sinput}
+> source("http://www.bioconductor.org/biocLite.R")
+> biocLite("gprege")
+\end{Sinput}
+\end{Schunk}
+
+Otherwise, to manually install the gprege software, unpack the software and run
+\begin{verbatim}
+  R CMD INSTALL gprege
+\end{verbatim}
+
+To load the package start R and run
+\begin{Schunk}
+\begin{Sinput}
+> library(gprege)

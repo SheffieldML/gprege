@@ -1,0 +1,63 @@
+## In a terminal, open an R session with sudo priviledges:
+sudo R
+
+## Then, enter the following in the R session:
+install.packages("gptk", dependencies=TRUE) ## Install the latest released version of GPTK.
+
+####################################################################################
+## ---- To build the gprege R package from the 'mlprojects/gprege/R/' folder: ----
+## First make sure documentation is complete. Antti's python function might help in that respect.
+## Edit '~/mlprojects/R/general/matlab_to_R_doc_converter.py' so that, for instance, BASEPATH='~/mlprojects/gp/matlab/.'
+## is the base path of the matlab code you wish to translate documentation for, and MANPATH='~/mlprojects/gp/R/man'
+## is the target path you want for the translated R manuals.
+## Then in a terminal, do for example:
+
+python ~/mlprojects/R/general/matlab_to_R_doc_converter.py -o gpCreate
+
+## ---- Potential issues with the documentation files: ----
+## Make sure not to leave any latex-style comments in the .Rd files before package 'build'.
+## R 2.13.0 or higher does not like assignments in \usage sections.
+## Make sure all examples in \usage sections match exactly with the code, e.g. use  'only.values=TRUE', not 'only.values'.
+
+## ---- Potential issues with Sweave: ----
+## Make sure no calls are made to dev.new() in Sweave snipets.
+## Create only one plot per Sweave snipet. Use cat().
+
+####################################################################################
+## In an R session:
+
+## This will load up in memory all the package-related source files in 'mlprojects/gprege/R/R/'.
+
+rm(list = ls())
+source("~/mlprojects/gprege/R/R/rocStats.R")
+source("~/mlprojects/gprege/R/R/compareROC.R")
+source("~/mlprojects/gprege/R/R/exhaustivePlot.R")
+source("~/mlprojects/gprege/R/R/gprege.R")
+source("~/mlprojects/gprege/R/R/demTp63Gp1.R")
+
+system('rm -R -f ~/gprege/') ## Remove any previous copies of '~/gprege/'.
+package.skeleton(name='gprege', path='~') ## The package skeleton folder [name] will be created in [path].
+system('rm -R -f ~/gprege/man/') ## Overwrite skeleton man '~/gprege/man/' with proper 'man/'.
+system('cp -R ~/mlprojects/gprege/R/man/ ~/gprege/')
+system('cp -R ~/mlprojects/gprege/R/inst/ ~/gprege/')
+system('cp -R ~/mlprojects/gprege/R/data/ ~/gprege/')
+system('cp ~/mlprojects/gprege/R/DESCRIPTION ~/gprege/') ## Make sure to keep 'DESCRIPTION' up-to-date first.
+
+## Clean up.
+system('rm ~/gprege/data/FullDellaGattaData.RData') ## Remove unnecessary files.
+system('rm ~/gprege/Read-and-delete-me') ## Read before removing.
+system('rm -R -f ~/gprege/data/.svn/') ## Remove hidden files related to the svn from every copied folder.
+system('rm -R -f ~/gprege/inst/.svn/')
+system('rm -R -f ~/gprege/inst/doc/.svn/')
+system('rm -R -f ~/gprege/man/.svn/')
+system('rm ~/gprege/inst/*~') ## Remove backup files.
+system('rm ~/gprege/man/*~')
+system('rm ~/gprege/inst/doc/*~')
+
+q('no') ## Exit with no saving.
+
+## In a terminal.
+cd ~
+rm -R gprege.Rcheck/
+R CMD build gprege ## Builds package.
+R CMD check gprege ## Validates package.
