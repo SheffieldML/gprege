@@ -126,9 +126,14 @@ Finally the function exhaustivePlot will reveal, through an exhaustive search in
 ENTER to continue
 ```
   
-Proï¬le #249.
-Left: GP ï¬t with different initialisations on proï¬le #249. Top-right: Log-marginal likelihood (LML) contour.
-Bottom-right: GP ï¬t with maximum LML hyperparameters from the exhaustive search.
+<p><center>
+<img src="html/gpPlot1.png" width ="45%"> <img src="html/exhaustivePlot1.png" width ="45%">
+<br>
+Proﬁle #249.<br>
+<b>Left:</b> GP ﬁt with different initialisations on proﬁle #249.
+<b>Top-right:</b> Log-marginal likelihood (LML) contour.<br>
+<b>Bottom-right:</b> GP ﬁt with maximum LML hyperparameters from the exhaustive search.
+</center>
 
 
 ```
