@@ -186,7 +186,11 @@ Proﬁle #249.<br>
 ENTER to continue
 ```
   
-Proï¬le #370.
+<p><center>
+<img src="html/gpPlot1.png" width ="45%"> <img src="html/exhaustivePlot1.png" width ="45%">
+<br>
+Proﬁle #370.<br>
+</center>
 
 
 Ranking differential genes
