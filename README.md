@@ -6,6 +6,8 @@ Gaussian process software in R and Matlab for detecting quiet genes. From Alfred
 
 The GPREGE software implements our methodology of Gaussian process regression models for the analysis of microarray time series, described in [3]. The package can be used to filter quiet genes and quantify differential expression in time-series expression ratios or for ranking candidate targets of a trascription factor. This page describes examples of how to use the GPREGE software. A detailed discussion of the ranking approach and dataset used can be found in the paper. 
 
+Below we detail how to run the MATLAB software. Information on the R software is provided in <a href="http://www.bioconductor.org/packages/devel/bioc/html/gprege.html">this Bioconductor</a> package.
+
 Introductory example analysis - TP63 microarray data
 ---
 
@@ -234,6 +236,6 @@ References
 
 [1] C. Angelini, D. De Canditiis, M. Mutarelli, and M. Pensky. A Bayesian approach to estimation and testing in time-course microarray experiments. Stat Appl Genet Mol Biol, 6:24, 2007. 
 
-[2] G. Della Gatta, M. Bansal, A. Ambesi-Impiombato, D. Antonini, C. Missero, and D. di Bernardo. Direct targets of the TRP63 transcription factor revealed by a combination of gene expression proï¬ling and reverse engineering. Genome research, 18(6):939, 2008. 
+[2] G. Della Gatta, M. Bansal, A. Ambesi-Impiombato, D. Antonini, C. Missero, and D. di Bernardo. Direct targets of the TRP63 transcription factor revealed by a combination of gene expression profiling and reverse engineering. Genome research, 18(6):939, 2008. 
 
-[3] Alfredo A. Kalaitzis and Neil D. Lawrence. A simple approach to ranking differentially expressed gene expression time courses through gaussian process regression. BMC Bioinformatics, 12(180), 2011. doi: 10.1186/1471-2105-12-180.
+[3] Alfredo A. Kalaitzis and Neil D. Lawrence. A simple approach to ranking differentially expressed gene expression time courses through Gaussian process regression. BMC Bioinformatics, 12(180), 2011. doi: 10.1186/1471-2105-12-180.
