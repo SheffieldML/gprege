@@ -11,7 +11,7 @@ Below we detail how to run the MATLAB software. Information on the R software is
 Introductory example analysis - TP63 microarray data
 ---
 
-In the following examples, we will be using experimental data from [2], available on the GEO database under accession number GSE10562. The ranking list of direct targets is available at genome.cshlp.org/content/suppl/2008/05/05/gr.073601.107.DC1/DellaGatta_SupTable1 .xls We load the experimental data,
+In the following examples, we will be using experimental data from [2], available on the GEO database under accession number GSE10562. The ranking list of direct targets is available at <a href="http://genome.cshlp.org/content/suppl/2008/05/05/gr.073601.107.DC1/DellaGatta_SupTable1.xls">genome.cshlp.org/content/suppl/2008/05/05/gr.073601.107.DC1/DellaGatta_SupTable1.xls</a> We load the experimental data,
 
 ```matlab
 load DellaGattaData.mat 
