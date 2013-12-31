@@ -217,7 +217,17 @@ The following compares GPREGE [3] to BATS [1] via ROC curves:
 compareROC(gpregeOutput.rankingScores, DGatta_labels_byTSNItop100, BATSranking);
 ```
  
-ROC comparison on experimental data from [2]. One curve for the GP method and three for BATS, using different noise models (subscript 'G' for Gaussian, 'T' for Student's-t and 'DE' for double exponential marginal distributions of error), followed by the area under the corresponding curve (AUC). 
+<p><center>
+<img src="html/GPvsBATSonDGattaData.png" width ="45%">
+<br>
+ROC comparison on experimental data from [2].
+One curve for the GP method and three for BATS, using different noise models
+(subscript 'G' for Gaussian, 'T' for Student's-t and 'DE' for double exponential
+marginal distributions of error), followed by the area under the corresponding
+curve (AUC).
+
+<br>
+</center>
 
 References
 --
