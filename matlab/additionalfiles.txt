@@ -1,0 +1,15 @@
+# These are files that should be packaged for the GPRGE software.
+
+dir: html
+~/mlprojects/gprege/html/index.html
+~/mlprojects/gprege/html/exhaustivePlot1.png
+~/mlprojects/gprege/html/exhaustivePlot2.png
+~/mlprojects/gprege/html/gpPlot1.png
+~/mlprojects/gprege/html/gpPlot2.png
+~/mlprojects/gprege/html/GPvsBATSonDGattaData.png
+
+dir: .
+~/mlprojects/datasets/matlab/DellaGattaData.mat
+~/mlprojects/datasets/matlab/DGdat_p63_case1_GL.txt
+~/mlprojects/datasets/matlab/DGdat_p63_case2_GL.txt
+~/mlprojects/datasets/matlab/DGdat_p63_case3_GL.txt

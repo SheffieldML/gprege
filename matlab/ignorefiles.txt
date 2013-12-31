@@ -1,0 +1,7 @@
+script_fitOnManyBATSDatasets.m
+createLabelsForDellaGatta.m
+exportProfilesToFile.m
+processReplicates.m
+importBATSdataFile.m
+generateProfilesFromGp.m
+GPRonExprs.m
