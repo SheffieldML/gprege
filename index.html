@@ -1,0 +1,270 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>GPrege by SheffieldML</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-light.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>GPrege</h1>
+        <p>Gaussian process software in R and Matlab for detecting quiet genes. From Alfredo Kalaitzis&#39;s thesis work.</p>
+
+        <p class="view"><a href="https://github.com/SheffieldML/gprege">View the Project on GitHub <small>SheffieldML/gprege</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/SheffieldML/gprege/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/SheffieldML/gprege/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/SheffieldML/gprege">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a id="gprege-gaussian-process-ranking-and-estimation-of-gene-expression-time-series" class="anchor" href="#gprege-gaussian-process-ranking-and-estimation-of-gene-expression-time-series" aria-hidden="true"><span class="octicon octicon-link"></span></a>GPREGE: Gaussian Process Ranking and Estimation of Gene Expression time-series</h1>
+
+<p>Gaussian process software in R and Matlab for detecting quiet genes. From Alfredo Kalaitzis's thesis work.</p>
+
+<p>The GPREGE software implements our methodology of Gaussian process regression models for the analysis of microarray time series, described in [3]. The package can be used to filter quiet genes and quantify differential expression in time-series expression ratios or for ranking candidate targets of a trascription factor. This page describes examples of how to use the GPREGE software. A detailed discussion of the ranking approach and dataset used can be found in the paper. </p>
+
+<p>Below we detail how to run the MATLAB software. Information on the R software is provided in <a href="http://www.bioconductor.org/packages/devel/bioc/html/gprege.html">this Bioconductor</a> package.</p>
+
+<h2>
+<a id="introductory-example-analysis---tp63-microarray-data" class="anchor" href="#introductory-example-analysis---tp63-microarray-data" aria-hidden="true"><span class="octicon octicon-link"></span></a>Introductory example analysis - TP63 microarray data</h2>
+
+<p>In the following examples, we will be using experimental data from [2], available on the GEO database under accession number GSE10562. The ranking list of direct targets is available at <a href="http://genome.cshlp.org/content/suppl/2008/05/05/gr.073601.107.DC1/DellaGatta_SupTable1.xls">genome.cshlp.org/content/suppl/2008/05/05/gr.073601.107.DC1/DellaGatta_SupTable1.xls</a> We load the experimental data,</p>
+
+<div class="highlight highlight-matlab"><pre><span class="pl-k">load</span> DellaGattaData.mat 
+tTrue = [<span class="pl-c1">0</span><span class="pl-k">:</span><span class="pl-c1">20</span><span class="pl-k">:</span><span class="pl-c1">240</span>]<span class="pl-k">'</span>; <span class="pl-c">% Times of sampling. </span></pre></div>
+
+<p>Load BATS rankings (Angelini, 2008) Case 1: Delta error prior, Case 2: Inverse Gamma error prior, Case 3: Double Exponential error prior</p>
+
+<div class="highlight highlight-matlab"><pre>BATSranking = <span class="pl-k">zeros</span>(<span class="pl-k">length</span>(DGatta_labels_byTSNItop100), <span class="pl-c1">3</span>);
+BATSgenenumbers = <span class="pl-k">zeros</span>(<span class="pl-k">length</span>(DGatta_labels_byTSNItop100), <span class="pl-c1">1</span>);
+<span class="pl-k">for</span> f = <span class="pl-c1">1</span><span class="pl-k">:</span><span class="pl-c1">3</span>
+  importBATSrankingFile( [<span class="pl-s"><span class="pl-pds">'</span>DGdat_p63_case<span class="pl-pds">'</span></span> <span class="pl-k">num2str</span>(f) <span class="pl-s"><span class="pl-pds">'</span>_GL.txt<span class="pl-pds">'</span></span>],{<span class="pl-s"><span class="pl-pds">'</span>BATSrankdata<span class="pl-pds">'</span></span>,<span class="pl-s"><span class="pl-pds">'</span>BATSgenenumbersStr<span class="pl-pds">'</span></span>});
+  <span class="pl-c">% Extract the gene numbers in the ranked list.</span>
+  <span class="pl-k">for</span> <span class="pl-k">i</span> = <span class="pl-c1">1</span><span class="pl-k">:</span><span class="pl-k">length</span>(BATSrankdata)
+    BATSgenenumbers(<span class="pl-k">i</span>) = <span class="pl-k">str2double</span>(BATSgenenumbersStr{<span class="pl-k">i</span><span class="pl-k">+</span><span class="pl-c1">1</span>,<span class="pl-c1">2</span>}(<span class="pl-c1">2</span><span class="pl-k">:end</span>));
+  <span class="pl-k">end</span>
+  [~, ix] = <span class="pl-k">sort</span>(BATSgenenumbers);
+  BATSranking(<span class="pl-k">:</span>,f) = BATSrankdata(ix, <span class="pl-c1">2</span>); <span class="pl-c">% Sort rankings by gene numbers.</span>
+<span class="pl-k">end</span></pre></div>
+
+<p>The smaller a BATS-rank metric is, the better the rank of the gene reporter. Invert those rank metrics to compare on a common ground with gprege.</p>
+
+<div class="highlight highlight-matlab"><pre>BATSranking = <span class="pl-c1">1</span><span class="pl-k">./</span>BATSranking;</pre></div>
+
+<p>With a matrix we configure different hyperparameter initialisations. We use the following row structure: [inverse-lengthscale percent-signal-variance percent-noise-variance].</p>
+
+<div class="highlight highlight-matlab"><pre>gpregeOptions.inithypers = [<span class="pl-c1">1</span><span class="pl-k">/</span><span class="pl-c1">1000</span> <span class="pl-c1">0</span> <span class="pl-c1">1</span>; <span class="pl-c1">1</span><span class="pl-k">/</span><span class="pl-c1">20</span> <span class="pl-c1">0.999</span> <span class="pl-c1">1e-3</span>; <span class="pl-c1">1</span><span class="pl-k">/</span><span class="pl-c1">80</span> <span class="pl-c1">2</span><span class="pl-k">/</span><span class="pl-c1">3</span> <span class="pl-c1">1</span><span class="pl-k">/</span><span class="pl-c1">3</span>]; </pre></div>
+
+<p>Setup gprege options.</p>
+
+<div class="highlight highlight-matlab"><pre>gpregeOptions.exhaustPlotRes = <span class="pl-c1">30</span>; <span class="pl-c">% Exhaustive plot resolution of the LML function.</span>
+gpregeOptions.exhaustPlotMaxWidth = <span class="pl-c1">100</span>; <span class="pl-c">% Exhaustive plot maximum lengthscale.</span>
+gpregeOptions.exhaustPlotLevels = <span class="pl-c1">10</span>; <span class="pl-c">% Exhaustive plot contour levels.</span>
+gpregeOptions.labels = DGatta_labels_byTSNI; <span class="pl-c">% Noisy ground truth labels (which genes are in the top 786 ranks of the TSNI ranking).</span>
+gpregeOptions.iters = <span class="pl-c1">100</span>; <span class="pl-c">% SCG optimisation: max iterations. </span>
+gpregeOptions.display = <span class="pl-c1">false</span>; <span class="pl-c">% SCG optimisation: display messages.</span></pre></div>
+
+<h2>
+<a id="interactive-mode" class="anchor" href="#interactive-mode" aria-hidden="true"><span class="octicon octicon-link"></span></a>Interactive mode</h2>
+
+<p>Let us now examine one by one, in an interactive fashion, a few time-courses of the these data. The following option makes GPREGE wait for a keystroke to proceed to the next profile.</p>
+
+<div class="highlight highlight-matlab"><pre>gpregeOptions.explore = <span class="pl-c1">true</span>; <span class="pl-c">% Explore individual profiles in an interactive fashion. </span></pre></div>
+
+<p>Set the index range so that the gene expression profiles correspond to the top ranks of direct targets, as suggested by TSNI [2].</p>
+
+<div class="highlight highlight-matlab"><pre>gpregeOptions.indexRange = <span class="pl-k">find</span>(DGatta_labels_byTSNItop100);
+gprege(<span class="pl-k">exprs_tp63_RMA'</span>, tTrue, gpregeOptions); </pre></div>
+
+<p>GPREGE will generate a report and a few plots for each explored profile. The first line contains the index of the profile in exprs_tp63_RMA and its ground truth (according to TSNI).
+The hyperparameters of the optimised log-marginal likelihood (LML) follow and then the initialisation (indicated by '&lt;-') from which it came.
+Then a few statistics; the observed standard deviation of the time-series and the sum of the explained std.deviation (by the GP) and noise (Gaussian) std.deviation.
+Finally the function exhaustivePlot will reveal, through an exhaustive search in the hyperparemeter space, the approximate true maximum LML and corresponding hyperparameters. gpregeOptions.exhaustPlotMaxWidth defines the limit of the lengthscale search range.</p>
+
+<pre><code>============================================================
+
+ Profile 249                    Label: 1
+
+============================================================
+
+        Length-scale              Signal               Noise
+
+        8.473909e+01        2.290120e-01        3.297385e-02
+
+
+
+             Init.le                 LML                Best
+
+         1000.000000            2.944504                    
+
+           30.000000            9.873420                    
+
+           80.000000           16.694727                  &lt;-
+
+
+
+       Total st.dev.      Estim. sig + noise
+
+        2.004927e-01            2.619858e-01
+
+
+
+      Log-ratio (max(LML(2:end))-LML[1])
+
+        1.375022e+01
+
+============= EXHAUSTIVE LML SEARCH ========================
+
+        Length-scale              Signal               Noise
+
+        7.410204e+01        1.676242e-01        3.286853e-02
+
+
+
+             Max LML  Estim. sig + noise
+
+           16.372396        2.004927e-01
+
+
+
+ENTER to continue
+</code></pre>
+
+<p></p><p></p>
+<img src="html/gpPlot1.png" width="45%"> <img src="html/exhaustivePlot1.png" width="45%">
+<br>
+Proﬁle #249.<br>
+<b>Left:</b> GP ﬁt with different initialisations on proﬁle #249.
+<b>Top-right:</b> Log-marginal likelihood (LML) contour.<br>
+<b>Bottom-right:</b> GP ﬁt with maximum LML hyperparameters from the exhaustive search.
+
+
+<pre><code>============================================================
+
+ Profile 370                    Label: 1
+
+============================================================
+
+        Length-scale              Signal               Noise
+
+        1.853874e+02        3.766069e-01        1.049200e-01
+
+
+
+             Init.le                 LML                Best
+
+         1000.000000            0.245622                    
+
+           30.000000            2.470319                    
+
+           80.000000            6.371275                  &lt;-
+
+
+
+       Total st.dev.      Estim. sig + noise
+
+        2.467521e-01            4.815269e-01
+
+
+
+      Log-ratio (max(LML(2:end))-LML[1])
+
+        6.125653e+00
+
+============= EXHAUSTIVE LML SEARCH ========================
+
+        Length-scale              Signal               Noise
+
+        6.191837e+01        1.510173e-01        9.573479e-02
+
+
+
+             Max LML  Estim. sig + noise
+
+            5.075967        2.467521e-01
+
+
+
+ENTER to continue
+</code></pre>
+
+<p></p><p></p>
+<img src="html/gpPlot1.png" width="45%"> <img src="html/exhaustivePlot1.png" width="45%">
+<br>
+Proﬁle #370.<br>
+
+
+<h2>
+<a id="ranking-differential-genes" class="anchor" href="#ranking-differential-genes" aria-hidden="true"><span class="octicon octicon-link"></span></a>Ranking differential genes</h2>
+
+<p>Now we demonstrate bulk ranking of differential expression on the full dataset. Later we evaluate the results from the bulk ranking. Total computation time was approximately 30 minutes on a desktop running Ubuntu 10.04 with a dual-core CPU at 2.8 GHz and 3.2 GiB of memory.</p>
+
+<div class="highlight highlight-matlab"><pre>gpregeOptions.explore = <span class="pl-c1">false</span>; <span class="pl-c">% No interactive mode.</span>
+gpregeOptions.indexRange = []; <span class="pl-c">% Reset index range. All profiles will be ranked. </span>
+gpregeOutput = gprege(<span class="pl-k">exprs_tp63_RMA'</span>, tTrue, gpregeOptions); </pre></div>
+
+<h2>
+<a id="comparing-against-bats-1" class="anchor" href="#comparing-against-bats-1" aria-hidden="true"><span class="octicon octicon-link"></span></a>Comparing against BATS [1]</h2>
+
+<p>Finally, we demonstrate compareROC, a facility for comparing the performance of GPREGE on a dataset with some other method (see figure below). In this example, we reproduce the main result presented in [3].
+Specifically, we apply standard Gaussian process regression and BATS [1] on experimental gene expression data, where only the top 100 ranks of TSNI were labelled as truly differentially expressed in the noisy ground truth. From the output of each model, a ranking of differential expression is produced and assessed with ROC curves to quantify how well in accordance to the noisy ground truth each method performs. For convenience, gprege was already run on the full DellaGatta dataset and the resulting rank metrics are stored in gpregeOutput.rankingScores (see demTp63Gp1.m).</p>
+
+<p>Experimental results demonstrated on the paper are slightly better than the ones presented here, because more initialisation points were used in optimising the likelihood wrt the kernel hypeparameters (gpregeOptions.inithypers) and the converged hyperparameters with the best log-marginal likelihood are always used to circumvent the non-convexity of the LML function.</p>
+
+<p>The following compares GPREGE [3] to BATS [1] via ROC curves:</p>
+
+<pre><code>compareROC(gpregeOutput.rankingScores, DGatta_labels_byTSNItop100, BATSranking);
+</code></pre>
+
+<p></p><p></p>
+<img src="html/GPvsBATSonDGattaData.png" width="45%">
+<br>
+ROC comparison on experimental data from [2].
+One curve for the GP method and three for BATS, using different noise models
+(subscript 'G' for Gaussian, 'T' for Student's-t and 'DE' for double exponential
+marginal distributions of error), followed by the area under the corresponding
+curve (AUC).
+
+<p><br>
+</p>
+
+<h2>
+<a id="references" class="anchor" href="#references" aria-hidden="true"><span class="octicon octicon-link"></span></a>References</h2>
+
+<p>[1] C. Angelini, D. De Canditiis, M. Mutarelli, and M. Pensky. A Bayesian approach to estimation and testing in time-course microarray experiments. Stat Appl Genet Mol Biol, 6:24, 2007. </p>
+
+<p>[2] G. Della Gatta, M. Bansal, A. Ambesi-Impiombato, D. Antonini, C. Missero, and D. di Bernardo. Direct targets of the TRP63 transcription factor revealed by a combination of gene expression profiling and reverse engineering. Genome research, 18(6):939, 2008. </p>
+
+<p>[3] Alfredo A. Kalaitzis and Neil D. Lawrence. A simple approach to ranking differentially expressed gene expression time courses through Gaussian process regression. BMC Bioinformatics, 12(180), 2011. doi: 10.1186/1471-2105-12-180.</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/SheffieldML">SheffieldML</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-62971049-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
